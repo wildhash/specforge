@@ -8,7 +8,9 @@
 import { useState, type FormEvent } from 'react';
 import { useRouter } from 'next/navigation';
 
-const DEMO_MODE = process.env.NEXT_PUBLIC_DEMO_MODE === 'true';
+// Demo mode: always true for static builds (GitHub Pages)
+// In development with API routes, this would be false
+const DEMO_MODE = true;
 
 const EXAMPLE_IDEAS = [
   'A SaaS tool that helps solo founders validate ideas before building',

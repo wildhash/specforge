@@ -10,7 +10,9 @@ import { useParams } from 'next/navigation';
 import type { ArtifactState, Artifact } from '@/core/artifact-state.schema';
 import { simulatePipelineProgress } from '@/lib/demo-data';
 
-const DEMO_MODE = process.env.NEXT_PUBLIC_DEMO_MODE === 'true';
+// Demo mode: always true for static builds (GitHub Pages)
+// In development with API routes, this would be false  
+const DEMO_MODE = true;
 
 function ArtifactCard({ title, icon, artifact }: { title: string; icon: string; artifact?: Artifact }) {
   const status = artifact?.status ?? 'pending';

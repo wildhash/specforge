@@ -6,7 +6,8 @@
 'use client';
 
 export function DemoBanner() {
-  const isDemoMode = process.env.NEXT_PUBLIC_DEMO_MODE === 'true';
+  // Always show banner in static builds (GitHub Pages)
+  const isDemoMode = true;
   
   if (!isDemoMode) return null;
   

@@ -22,7 +22,7 @@ const nextConfig = {
   env: {
     SPECFORGE_MAX_REVISIONS: process.env.SPECFORGE_MAX_REVISIONS ?? '3',
     SPECFORGE_RUN_TIMEOUT_MS: process.env.SPECFORGE_RUN_TIMEOUT_MS ?? '300000',
-    DEMO_MODE: process.env.DEMO_MODE ?? 'false',
+    NEXT_PUBLIC_DEMO_MODE: process.env.NEXT_PUBLIC_DEMO_MODE ?? 'false',
   },
 };
 
