@@ -240,24 +240,6 @@ export interface ValidationResult {
   warnings: string[];
 }
 
-// ─── State Mutation Helpers ───────────────────────────────────────────────────
-
-/**
- * Entry point — initializes a fresh ArtifactState for a new run.
- * @param idea - Raw user idea string
- * @param runId - UUID for this run
- * @returns Initialized ArtifactState with empty orchestration plan
- */
-export declare function initializeArtifactState(idea: string, runId: string): ArtifactState;
-
-/**
- * Evaluates current ArtifactState and returns next agent(s) ready to invoke.
- * Respects DAG dependency ordering and parallel execution opportunities.
- * @param state - Current artifact state
- * @returns Ordered list of agents ready to run (parallel-safe)
- */
-export declare function resolveNextAgents(state: ArtifactState): AgentName[];
-
 /**
  * Merges a newly produced artifact into the state and updates timestamps.
  * @param state - Current artifact state

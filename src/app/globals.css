@@ -3,9 +3,9 @@
 @tailwind utilities;
 
 @layer base {
-  :root { --background: 222.2 84% 4.9%; --foreground: 210 40% 98%; }
-  * { @apply border-border; }
-  body { @apply bg-background text-foreground; font-feature-settings: "rlig" 1, "calt" 1; }
+  :root { --background: 222.2 84% 4.9%; --foreground: 210 40% 98%; --border: 215 27.9% 16.9%; }
+  * { border-color: hsl(var(--border)); }
+  body { background-color: hsl(var(--background)); color: hsl(var(--foreground)); font-feature-settings: "rlig" 1, "calt" 1; }
   html { scroll-behavior: smooth; }
   ::-webkit-scrollbar { width: 6px; }
   ::-webkit-scrollbar-track { background: transparent; }

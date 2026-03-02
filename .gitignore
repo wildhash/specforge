@@ -10,6 +10,5 @@ coverage/
 *.pem
 npm-debug.log*
 *.tsbuildinfo
-next-env.d.ts
 orchestrator/state.json
 specforge-output/
