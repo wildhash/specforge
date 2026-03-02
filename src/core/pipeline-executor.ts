@@ -19,7 +19,7 @@ async function executePipeline(runId: string, state: ArtifactState): Promise<voi
   let currentState = state;
   setPipelineState(runId, currentState);
 
-  const maxIterations = parsePositiveInt(process.env.PIPELINE_MAX_ITERATIONS, 20);
+  const maxIterations = parsePositiveInt(process.env.PIPELINE_MAX_ITERATIONS, 20, 'PIPELINE_MAX_ITERATIONS');
   let iterations = 0;
 
   while (!isPipelineComplete(currentState) && iterations < maxIterations) {
@@ -106,12 +106,17 @@ function sleep(ms: number): Promise<void> {
   return new Promise((r) => setTimeout(r, ms));
 }
 
-function parsePositiveInt(value: string | undefined, defaultValue: number): number {
+function parsePositiveInt(
+  value: string | undefined,
+  defaultValue: number,
+  label = 'value'
+): number {
   if (value == null || value === '') return defaultValue;
 
   const parsed = Number.parseInt(value, 10);
   if (Number.isNaN(parsed) || parsed <= 0) {
-    throw new Error(`Invalid PIPELINE_MAX_ITERATIONS: ${value}`);
+    console.warn(`[SpecForge] Invalid ${label} '${value}', falling back to ${defaultValue}`);
+    return defaultValue;
   }
 
   return parsed;
