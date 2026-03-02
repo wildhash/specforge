@@ -5,7 +5,7 @@
  * src/components/IdeaInput.tsx
  */
 
-import { useState, useTransition } from 'react';
+import { useState, useTransition, type FormEvent } from 'react';
 import { useRouter } from 'next/navigation';
 import { startPipeline } from '@/actions/start-pipeline';
 
@@ -21,14 +21,23 @@ export function IdeaInput() {
   const [error, setError] = useState<string | null>(null);
   const router = useRouter();
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = (e: FormEvent) => {
     e.preventDefault();
     if (!idea.trim() || isPending) return;
     setError(null);
-    startTransition(async () => {
-      const { runId, error: pipelineError } = await startPipeline(idea.trim());
-      if (pipelineError || !runId) { setError(pipelineError ?? 'Unknown error.'); return; }
-      router.push(`/run/${runId}`);
+    startTransition(() => {
+      void (async () => {
+        try {
+          const { runId, error: pipelineError } = await startPipeline(idea.trim());
+          if (pipelineError || !runId) {
+            setError(pipelineError ?? 'Unknown error.');
+            return;
+          }
+          router.push(`/run/${runId}`);
+        } catch {
+          setError('Unknown error.');
+        }
+      })();
     });
   };
 
@@ -47,7 +56,14 @@ export function IdeaInput() {
       <div className="space-y-2">
         <p className="text-xs text-slate-500 text-center uppercase tracking-widest">Try an example</p>
         {EXAMPLE_IDEAS.map((ex) => (
-          <button key={ex} onClick={() => !isPending && setIdea(ex)} disabled={isPending} className="w-full text-left px-4 py-3 rounded-xl bg-white/5 border border-white/10 text-slate-400 text-sm hover:bg-white/10 hover:text-white transition-all disabled:opacity-40">"{ex}"</button>
+          <button
+            key={ex}
+            onClick={() => !isPending && setIdea(ex)}
+            disabled={isPending}
+            className="w-full text-left px-4 py-3 rounded-xl bg-white/5 border border-white/10 text-slate-400 text-sm hover:bg-white/10 hover:text-white transition-all disabled:opacity-40"
+          >
+            &quot;{ex}&quot;
+          </button>
         ))}
       </div>
     </div>

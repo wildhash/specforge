@@ -10,7 +10,7 @@
  * Run with: npx vitest run specforge-e2e-tests.ts
  */
 
-import { describe, it, expect, beforeEach, vi } from 'vitest';
+import { describe, it, expect } from 'vitest';
 import {
   initializeArtifactState,
   resolveNextAgents,
@@ -18,7 +18,7 @@ import {
   validateArtifact,
   isPipelineComplete,
   updateDagNodeStatus,
-} from './orchestrator-state-init';
+} from './src/core/orchestrator-state-init';
 import type {
   ArtifactState,
   Artifact,
@@ -33,7 +33,7 @@ import type {
   PitchDeckArtifact,
   TestPlanArtifact,
   RiskRegisterArtifact,
-} from './artifact-state.schema';
+} from './src/core/artifact-state.schema';
 
 // ─── Test Fixtures ────────────────────────────────────────────────────────────
 
@@ -208,12 +208,12 @@ describe('SpecForge E2E Integration Tests', () => {
     });
     it('S4-T4: pitch deck with wrong slide count fails', () => {
       const deck = makePitchDeckArtifact();
-      (deck as any).meta.slideCount = 8;
+      deck.meta = { ...deck.meta, slideCount: 8 };
       expect(validateArtifact(deck).valid).toBe(false);
     });
     it('S4-T5: pitch deck missing meta-story slide fails', () => {
       const deck = makePitchDeckArtifact();
-      (deck as any).meta.hasMetaStorySlide = false;
+      deck.meta = { ...deck.meta, hasMetaStorySlide: false };
       expect(validateArtifact(deck).valid).toBe(false);
     });
     it('S4-T6: revisionCount >= 2 produces warning', () => {

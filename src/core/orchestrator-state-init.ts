@@ -15,6 +15,7 @@ import type {
   ArtifactStatus,
   DagNode,
   OrchestrationPlan,
+  PitchDeckArtifact,
   ValidationResult,
 } from './artifact-state.schema';
 
@@ -28,25 +29,26 @@ const DAG_NODES: Omit<DagNode, 'status' | 'startedAt' | 'completedAt' | 'error'>
   { agent: 'qa_sentinel', dependsOn: ['strategist', 'architect', 'engineer', 'copywriter'] },
 ];
 
-const REQUIRED_ARTIFACTS: Record<AgentName, (keyof ArtifactState)[]> = {
-  orchestrator: ['orchestrationPlan'],
+type RequiredArtifactKey =
+  | 'prd'
+  | 'personas'
+  | 'userStories'
+  | 'adrs'
+  | 'designSpec'
+  | 'tasks'
+  | 'scaffolding'
+  | 'gtmStrategy'
+  | 'pitchDeck'
+  | 'testPlan'
+  | 'riskRegister';
+
+const REQUIRED_ARTIFACTS: Record<Exclude<AgentName, 'orchestrator'>, RequiredArtifactKey[]> = {
   strategist: ['prd', 'personas', 'userStories'],
   architect: ['adrs', 'designSpec'],
   engineer: ['tasks', 'scaffolding'],
   copywriter: ['gtmStrategy', 'pitchDeck'],
   qa_sentinel: ['testPlan', 'riskRegister'],
 };
-
-function generateUUID(): string {
-  if (typeof crypto !== 'undefined' && crypto.randomUUID) {
-    return crypto.randomUUID();
-  }
-  return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, (c) => {
-    const r = (Math.random() * 16) | 0;
-    const v = c === 'x' ? r : (r & 0x3) | 0x8;
-    return v.toString(16);
-  });
-}
 
 export function initializeArtifactState(idea: string, runId: string): ArtifactState {
   const now = new Date().toISOString();
@@ -106,10 +108,10 @@ export function validateArtifact(artifact: Artifact): ValidationResult {
   if (artifact.producedBy && !validAgents.includes(artifact.producedBy)) errors.push(`Unknown agent: ${artifact.producedBy}`);
   if (artifact.revisionCount >= 2) warnings.push(`Artifact revised ${artifact.revisionCount} times — approaching max`);
   if (artifact.status === 'needs_revision') warnings.push('Artifact flagged for revision');
-  if (artifact.producedBy === 'copywriter') {
-    const meta = (artifact as any).meta;
-    if (meta?.slideCount !== undefined && meta.slideCount !== 12) errors.push(`Pitch deck must have exactly 12 slides — found ${meta.slideCount}`);
-    if (meta?.hasMetaStorySlide === false) errors.push('Pitch deck missing required meta-story slide');
+  if (artifact.producedBy === 'copywriter' && artifact.filePath.toLowerCase().includes('pitch')) {
+    const meta = (artifact as PitchDeckArtifact).meta;
+    if (meta.slideCount !== 12) errors.push(`Pitch deck must have exactly 12 slides — found ${meta.slideCount}`);
+    if (!meta.hasMetaStorySlide) errors.push('Pitch deck missing required meta-story slide');
   }
   return { valid: errors.length === 0, errors, warnings };
 }
@@ -118,15 +120,23 @@ export function isPipelineComplete(state: ArtifactState): boolean {
   const { nodes } = state.orchestrationPlan;
   const allNodesComplete = nodes.filter((n) => n.agent !== 'orchestrator').every((n) => n.status === 'complete');
   if (!allNodesComplete) return false;
-  const agentsToCheck: AgentName[] = ['strategist', 'architect', 'engineer', 'copywriter', 'qa_sentinel'];
+  const agentsToCheck: Array<Exclude<AgentName, 'orchestrator'>> = [
+    'strategist',
+    'architect',
+    'engineer',
+    'copywriter',
+    'qa_sentinel',
+  ];
   for (const agent of agentsToCheck) {
     for (const key of REQUIRED_ARTIFACTS[agent]) {
       const artifact = state[key];
       if (!artifact) return false;
-      if (Array.isArray(artifact) && artifact.length === 0) return false;
-      if (!Array.isArray(artifact)) {
-        const status = (artifact as Artifact).status;
-        if (status === 'invalid' || status === 'pending') return false;
+
+      if (Array.isArray(artifact)) {
+        if (artifact.length === 0) return false;
+        if (artifact.some((a) => a.status !== 'valid')) return false;
+      } else {
+        if (artifact.status !== 'valid') return false;
       }
     }
   }

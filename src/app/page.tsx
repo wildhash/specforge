@@ -1,5 +1,3 @@
-'use client';
-
 /**
  * SpecForge — Landing Page
  * src/app/page.tsx

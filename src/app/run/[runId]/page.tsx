@@ -1,8 +1,8 @@
 'use client';
 
 /**
- * SpecForge — Output Package Page
- * src/app/output/[runId]/page.tsx
+* SpecForge — Run Status + Output Package Page
+* src/app/run/[runId]/page.tsx
  */
 
 import { useEffect, useState } from 'react';
@@ -23,13 +23,45 @@ function ArtifactCard({ title, icon, artifact }: { title: string; icon: string; 
   );
 }
 
-export default function OutputPage() {
+export default function RunPage() {
   const { runId } = useParams<{ runId: string }>();
   const [state, setState] = useState<ArtifactState | null>(null);
+  const [complete, setComplete] = useState(false);
+  const [loadError, setLoadError] = useState<string | null>(null);
 
   useEffect(() => {
     if (!runId) return;
-    fetch(`/api/pipeline/status?runId=${runId}`).then((r) => r.json()).then((d) => setState(d.state)).catch(console.error);
+
+    let stopped = false;
+    let intervalId: ReturnType<typeof setInterval> | undefined;
+
+    const poll = async () => {
+      try {
+        const res = await fetch(`/api/pipeline/status?runId=${runId}`);
+        if (!res.ok) throw new Error(`Request failed: ${res.status}`);
+        const data = (await res.json()) as { state?: ArtifactState; complete?: boolean };
+        if (stopped) return;
+
+        setState(data.state ?? null);
+        setComplete(Boolean(data.complete));
+        setLoadError(null);
+
+        if (data.complete && intervalId) {
+          clearInterval(intervalId);
+          intervalId = undefined;
+        }
+      } catch {
+        if (stopped) return;
+        setLoadError('Failed to load pipeline status.');
+      }
+    };
+
+    void poll();
+    intervalId = setInterval(() => void poll(), 1000);
+    return () => {
+      stopped = true;
+      if (intervalId) clearInterval(intervalId);
+    };
   }, [runId]);
 
   const groups = [
@@ -44,10 +76,23 @@ export default function OutputPage() {
     <main className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-950 to-slate-900">
       <div className="container mx-auto px-4 py-16 flex flex-col items-center gap-12 max-w-5xl">
         <div className="text-center space-y-4">
-          <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-green-500/20 border border-green-500/30 text-green-300 text-sm">✓ Product Package Assembled</div>
+          <div
+            className={`inline-flex items-center gap-2 px-4 py-2 rounded-full border text-sm ${
+              complete
+                ? 'bg-green-500/20 border-green-500/30 text-green-300'
+                : 'bg-purple-500/20 border-purple-500/30 text-purple-300 animate-pulse'
+            }`}
+          >
+            {complete ? '✓ Product Package Assembled' : 'Assembling product package…'}
+          </div>
           <h1 className="text-4xl md:text-5xl font-bold text-white">Your Product Package</h1>
           <p className="text-slate-400 font-mono text-sm">Run ID: {runId}</p>
         </div>
+        {loadError && (
+          <div className="w-full px-4 py-3 rounded-xl bg-red-500/20 border border-red-500/30 text-red-300 text-sm">
+            {loadError}
+          </div>
+        )}
         {groups.map((group) => (
           <div key={group.label} className="w-full space-y-4">
             <div className="flex items-center gap-3">

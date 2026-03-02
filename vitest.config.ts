@@ -8,7 +8,7 @@ export default defineConfig({
     coverage: {
       provider: 'v8',
       reporter: ['text', 'json', 'html'],
-      include: ['orchestrator-state-init.ts', 'artifact-state.schema.ts'],
+      include: ['src/core/orchestrator-state-init.ts', 'src/core/artifact-state.schema.ts'],
       thresholds: {
         lines: 90,
         functions: 90,

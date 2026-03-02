@@ -4,9 +4,8 @@
  * Version: 1.0 | Date: 2026-03-02
  */
 
-import type { NextConfig } from 'next';
-
-const nextConfig: NextConfig = {
+/** @type {import('next').NextConfig} */
+const nextConfig = {
   reactStrictMode: true,
   experimental: {
     serverActions: {
@@ -19,4 +18,4 @@ const nextConfig: NextConfig = {
   },
 };
 
-export default nextConfig;
+module.exports = nextConfig;
