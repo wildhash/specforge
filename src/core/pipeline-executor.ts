@@ -19,10 +19,10 @@ async function executePipeline(runId: string, state: ArtifactState): Promise<voi
   let currentState = state;
   setPipelineState(runId, currentState);
 
-  const MAX_ITERATIONS = 20;
+  const maxIterations = parsePositiveInt(process.env.PIPELINE_MAX_ITERATIONS, 20);
   let iterations = 0;
 
-  while (!isPipelineComplete(currentState) && iterations < MAX_ITERATIONS) {
+  while (!isPipelineComplete(currentState) && iterations < maxIterations) {
     iterations++;
 
     const nextAgents = resolveNextAgents(currentState);
@@ -104,4 +104,15 @@ async function invokeAgent(agent: AgentName, state: ArtifactState): Promise<Arti
 
 function sleep(ms: number): Promise<void> {
   return new Promise((r) => setTimeout(r, ms));
+}
+
+function parsePositiveInt(value: string | undefined, defaultValue: number): number {
+  if (value == null || value === '') return defaultValue;
+
+  const parsed = Number.parseInt(value, 10);
+  if (Number.isNaN(parsed) || parsed <= 0) {
+    throw new Error(`Invalid PIPELINE_MAX_ITERATIONS: ${value}`);
+  }
+
+  return parsed;
 }
