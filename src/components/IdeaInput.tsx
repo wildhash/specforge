@@ -5,9 +5,10 @@
  * src/components/IdeaInput.tsx
  */
 
-import { useState, useTransition, type FormEvent } from 'react';
+import { useState, type FormEvent } from 'react';
 import { useRouter } from 'next/navigation';
-import { startPipeline } from '@/actions/start-pipeline';
+
+const DEMO_MODE = process.env.NEXT_PUBLIC_DEMO_MODE === 'true';
 
 const EXAMPLE_IDEAS = [
   'A SaaS tool that helps solo founders validate ideas before building',
@@ -17,28 +18,47 @@ const EXAMPLE_IDEAS = [
 
 export function IdeaInput() {
   const [idea, setIdea] = useState('');
-  const [isPending, startTransition] = useTransition();
+  const [isPending, setIsPending] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const router = useRouter();
 
-  const handleSubmit = (e: FormEvent) => {
+  const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
     if (!idea.trim() || isPending) return;
+    
     setError(null);
-    startTransition(() => {
-      void (async () => {
-        try {
-          const { runId, error: pipelineError } = await startPipeline(idea.trim());
-          if (pipelineError || !runId) {
-            setError(pipelineError ?? 'Unknown error.');
-            return;
-          }
-          router.push(`/run/${runId}`);
-        } catch {
-          setError('Unknown error.');
+    setIsPending(true);
+    
+    try {
+      const runId = crypto.randomUUID();
+      
+      if (DEMO_MODE) {
+        // Demo mode: just navigate to run page with localStorage
+        if (typeof window !== 'undefined') {
+          localStorage.setItem('demoIdea', idea.trim());
         }
-      })();
-    });
+        router.push(`/run/${runId}`);
+        return;
+      }
+      
+      const res = await fetch('/api/pipeline/execute', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ runId, idea: idea.trim() }),
+      });
+      
+      if (!res.ok) {
+        const data = await res.json();
+        setError(data.error ?? 'Failed to start pipeline');
+        return;
+      }
+      
+      router.push(`/run/${runId}`);
+    } catch {
+      setError('Failed to start pipeline');
+    } finally {
+      setIsPending(false);
+    }
   };
 
   return (

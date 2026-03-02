@@ -9,7 +9,9 @@ import type { AgentName, Artifact, ArtifactState } from './artifact-state.schema
 import { setPipelineState } from './state-store';
 
 export function startPipelineExecution(runId: string, initialState: ArtifactState): void {
+  console.log(`[SpecForge] Starting pipeline execution for runId: ${runId}`);
   setPipelineState(runId, initialState);
+  console.log(`[SpecForge] State stored for runId: ${runId}. Idea: "${initialState.ideaRaw.substring(0, 50)}..."`);
   void executePipeline(runId, initialState).catch((err) =>
     console.error(`[SpecForge] Pipeline ${runId} failed:`, err)
   );

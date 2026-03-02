@@ -6,6 +6,7 @@
   "scripts": {
     "dev": "next dev",
     "build": "next build",
+    "build:export": "BUILD_MODE=export DEMO_MODE=true next build",
     "start": "next start",
     "test": "vitest run",
     "test:watch": "vitest",

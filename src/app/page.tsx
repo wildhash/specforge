@@ -5,6 +5,7 @@
  */
 
 import { IdeaInput } from '@/components/IdeaInput';
+import { DemoBanner } from '@/components/DemoBanner';
 
 const AGENTS = [
   { name: 'Strategist', color: 'from-yellow-500 to-orange-500', desc: 'PRD · Personas · Stories' },
@@ -18,6 +19,7 @@ const AGENTS = [
 export default function Home() {
   return (
     <main className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-950 to-slate-900">
+      <DemoBanner />
       <div className="container mx-auto px-4 py-24 flex flex-col items-center gap-16">
         <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-purple-500/20 border border-purple-500/30 text-purple-300 text-sm font-medium">
           <span className="w-2 h-2 rounded-full bg-purple-400 animate-pulse" />
