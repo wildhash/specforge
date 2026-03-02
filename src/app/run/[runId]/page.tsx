@@ -27,6 +27,7 @@ export default function RunPage() {
   const { runId } = useParams<{ runId: string }>();
   const [state, setState] = useState<ArtifactState | null>(null);
   const [complete, setComplete] = useState(false);
+  const [pipelineStatus, setPipelineStatus] = useState<ArtifactState['orchestrationPlan']['pipelineStatus'] | null>(null);
   const [loadError, setLoadError] = useState<string | null>(null);
 
   useEffect(() => {
@@ -39,14 +40,26 @@ export default function RunPage() {
       try {
         const res = await fetch(`/api/pipeline/status?runId=${runId}`);
         if (!res.ok) throw new Error(`Request failed: ${res.status}`);
-        const data = (await res.json()) as { state?: ArtifactState; complete?: boolean };
+        const data = (await res.json()) as {
+          state?: ArtifactState;
+          complete?: boolean;
+          pipelineStatus?: ArtifactState['orchestrationPlan']['pipelineStatus'];
+        };
         if (stopped) return;
 
+        const status = data.pipelineStatus ?? null;
         setState(data.state ?? null);
         setComplete(Boolean(data.complete));
-        setLoadError(null);
+        setPipelineStatus(status);
 
-        if (data.complete && intervalId) {
+        if (status === 'failed') {
+          const failedNode = data.state?.orchestrationPlan.nodes.find((n) => n.status === 'failed');
+          setLoadError(failedNode?.error ?? 'Pipeline failed.');
+        } else {
+          setLoadError(null);
+        }
+
+        if ((data.complete || status === 'failed') && intervalId) {
           clearInterval(intervalId);
           intervalId = undefined;
         }
@@ -78,12 +91,18 @@ export default function RunPage() {
         <div className="text-center space-y-4">
           <div
             className={`inline-flex items-center gap-2 px-4 py-2 rounded-full border text-sm ${
-              complete
-                ? 'bg-green-500/20 border-green-500/30 text-green-300'
-                : 'bg-purple-500/20 border-purple-500/30 text-purple-300 animate-pulse'
+              pipelineStatus === 'failed'
+                ? 'bg-red-500/20 border-red-500/30 text-red-300'
+                : complete
+                  ? 'bg-green-500/20 border-green-500/30 text-green-300'
+                  : 'bg-purple-500/20 border-purple-500/30 text-purple-300 animate-pulse'
             }`}
           >
-            {complete ? '✓ Product Package Assembled' : 'Assembling product package…'}
+            {pipelineStatus === 'failed'
+              ? 'Pipeline failed'
+              : complete
+                ? '✓ Product Package Assembled'
+                : 'Assembling product package…'}
           </div>
           <h1 className="text-4xl md:text-5xl font-bold text-white">Your Product Package</h1>
           <p className="text-slate-400 font-mono text-sm">Run ID: {runId}</p>

@@ -9,5 +9,10 @@ export async function GET(req: NextRequest): Promise<NextResponse> {
   const state = getPipelineState(runId);
   if (!state) return NextResponse.json({ error: 'Run not found' }, { status: 404 });
 
-  return NextResponse.json({ runId, state, complete: isPipelineComplete(state) });
+  return NextResponse.json({
+    runId,
+    state,
+    complete: isPipelineComplete(state),
+    pipelineStatus: state.orchestrationPlan.pipelineStatus,
+  });
 }
